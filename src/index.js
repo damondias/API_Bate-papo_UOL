@@ -75,7 +75,78 @@ app.get("/participants", async (req, res) => {
       res.sendStatus(500);
     }
 });
+
+app.post("/messages", async (req, res) => {
+    const messageSchema = joi.object({
+      to: joi.string().required(),
+      text: joi.string().required(),
+      type: joi.valid("message", "private_message"),
+    });
+    const validation = messageSchema.validate(req.body);
   
+    if (validation.error) {
+      res.status(422).send(
+        validation.error.details.map((erro) => {
+          erro.message;
+        })
+      );
+      return;
+    }
+  
+    try {
+      const username = req.header("User");
+  
+      const uol = mongoClient.db("batepapouol");
+      const participants = uol.collection("participants");
+      const messages = uol.collection("messages");
+      const validate = participants.find({ name: username });
+  
+      if (validate) {
+        await messages.insertOne({
+          from: username,
+          to: req.body.to,
+          text: req.body.text,
+          type: req.body.type,
+          time: dayjs().format("HH:mm:ss"),
+        });
+        res.sendStatus(201);
+      } else {
+        res.status(422).send("Formato inválido");
+      }
+    } catch (error) {
+      res.sendStatus(500);
+    }
+});
+
+app.get("/messages", async (req, res) => {
+    const limit = parseInt(req.query.limit);
+    const username = req.headers.user;
+  
+    try {
+      const uol = mongoClient.db("batepapouol");
+      const messages = uol.collection("messages");
+      const chat = await messages.find({}).toArray();
+  
+      const userMsgs = chat.filter(
+        (msg) =>
+          msg.to === username || msg.from === username || msg.to === "Todos"
+      );
+      if (!limit) {
+        res.send(userMsgs);
+      } else {
+        if (limit > userMsgs.length) {
+          res.send(userMsgs);
+          return;
+        } else {
+          const selecteds = [...userMsgs].reverse().slice(0, limit);
+          res.send(selecteds.reverse());
+        }
+      }
+    } catch (error) {
+      res.sendStatus(500);
+    }
+});
+
 app.listen(5000, () => {
     console.log("Rodando API Bate Papo Uol em http://localhost:5000");
 });
