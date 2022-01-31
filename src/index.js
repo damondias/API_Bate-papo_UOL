@@ -62,8 +62,20 @@ app.post("/participants", async (req, res) => {
     } catch {
       res.sendStatus(500);
     }
-  });
+});
 
+app.get("/participants", async (req, res) => {
+    try {
+      const uol = mongoClient.db("batepapouol");
+      const participants = uol.collection("participants");
+      let online = [];
+      online = await participants.find({}).toArray();
+      res.send(online);
+    } catch {
+      res.sendStatus(500);
+    }
+});
+  
 app.listen(5000, () => {
     console.log("Rodando API Bate Papo Uol em http://localhost:5000");
-  });
+});
