@@ -147,6 +147,30 @@ app.get("/messages", async (req, res) => {
     }
 });
 
+app.post("/status", async (req, res) => {
+    try {
+      const username = req.header("User");
+  
+      const uol = mongoClient.db("batepapouol");
+      const participants = uol.collection("participants");
+      const validate = await participants.findOne({ name: username });
+  
+      if (validate) {
+        await participants.updateOne(
+          { _id: validate._id },
+          { $set: { lastStatus: Date.now() } }
+        );
+        res.sendStatus(200);
+      } else {
+        res.sendStatus(404);
+  
+        return;
+      }
+    } catch (error) {
+      res.sendStatus(500);
+    }
+});
+  
 app.listen(5000, () => {
     console.log("Rodando API Bate Papo Uol em http://localhost:5000");
 });
