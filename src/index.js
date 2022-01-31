@@ -170,7 +170,34 @@ app.post("/status", async (req, res) => {
       res.sendStatus(500);
     }
 });
+
+setInterval(async () => {
+    try {
+
+      const uol = mongoClient.db("batepapouol");
+      const participants = uol.collection("participants");
+      const messages = uol.collection("messages");
+      const online = await participants.find({}).toArray();
   
+      for (const participant of online) {
+        if (Date.now()-participant.lastStatus > 10000) {       
+
+          await participants.deleteOne({ name: participant.name });
+
+          await messages.insertOne({
+            from: participant.name,
+            to: "Todos",
+            text: "sai da sala...",
+            type: "status",
+            time: dayjs().format("HH:mm:ss"),
+          });
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+},15000);
+
 app.listen(5000, () => {
     console.log("Rodando API Bate Papo Uol em http://localhost:5000");
 });
