@@ -1,5 +1,6 @@
 {
   "name": "Projeto_12_API_Bate-papo_UOL",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
